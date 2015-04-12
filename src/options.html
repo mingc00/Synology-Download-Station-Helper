@@ -8,6 +8,9 @@
     .form-group label {
       font-weight: bold;
     }
+    .advance-options {
+      visibility: hidden;
+    }
     #host { width: 200px; }
     #port { width: 70px; }
     #status {
@@ -19,34 +22,42 @@
 
 <body>
   <div class="form-group">
-    <label for="scheme">Scheme:</label>
+    <label for="scheme">Host:</label>
     <select id="scheme">
      <option value="http">http</option>
      <option value="https">https</option>
     </select>
-    <input type="text" id="host" placeholder="Your DS IP">
+    <span>://</span>
+    <input type="text" id="host" placeholder="DS IP or QuickConnect address">
+    <span>/</span>
   </div>
-
   <div class="form-group">
     <label for="port">Port:</label>
-    <input type="number" id="port" value="5000" min="1" max="65535">
+    <input type="number" id="port" value="5000" min="1" max="65535"
+      title="Default: 5000 for http, 5001 for https">
   </div>
-
   <div class="form-group">
-    <label for="token">Syno Token:</label>
-    <input type="text" id="token" value="">
-    <button id="fetch-token">Fetch</button>
-  </div>
-
-  <div class="form-group">
-    <label for="notification">Notification:</label>
+    <label for="notification">Show Notification:</label>
     <input type="checkbox" id="notification" value="do-notify">
+  </div>
+
+  <div class="form-group">
+    <input type="checkbox" id="show-advance">
+    <label for="show-advance">Show advance options</label>
+  </div>
+
+  <div class="advance-options">
+    <div class="form-group">
+      <label for="token">Syno Token:</label>
+      <input type="text" id="token" value="">
+    </div>
   </div>
 
   <div id="status">
   </div>
   <div>
-    <button id="save">Save</button>
+    <button type="button" id="save">Save</button>
+    <button type="button" id="close">Close</button>
   </div>
 
   <script src="../lib/regex-weburl.js"></script>

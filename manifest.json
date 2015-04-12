@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Synology Download Station Helper",
   "description": "Add links to Synology Download Station and get notifications.",
-  "version": "0.5",
+  "version": "0.65",
   "background": {
     "persistent": false,
     "scripts": [ "src/event_page.js" ]

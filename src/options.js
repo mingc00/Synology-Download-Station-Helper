@@ -1,11 +1,9 @@
 var _id = document.getElementById.bind(document);
+var noop = function() {};
 
 function showStatus(message) {
   var status = _id('status');
   status.textContent = message;
-  setTimeout(function() {
-    status.textContent = '';
-  }, 1800);
 }
 
 function getDSUrl() {
@@ -23,30 +21,28 @@ function validateUrl(url) {
   return true;
 }
 
-function fetchToken() {
+function fetchToken(callbackFn) {
   var url = getDSUrl();
+  var callbackFn = typeof(callbackFn) === "function" ? callbackFn : noop;
 
-  if (!validateUrl(url)) {
-    return;
-  }
-
-  _id('token').value = '';
   showStatus('Fetching token...');
 
   var xhr = new XMLHttpRequest();
   xhr.open("GET", url + '/webman/login.cgi', true);
   xhr.onreadystatechange = function() {
-    console.log(xhr.readyState, xhr.status);
     if (xhr.readyState !== 4) {
       return;
     }
 
     if (xhr.status === 200) {
-      console.log(xhr.responseText);
       try {
         var resp = JSON.parse(xhr.responseText);
         if (resp.SynoToken) {
           _id('token').value = resp.SynoToken;
+          showStatus('');
+          callbackFn();
+        } else {
+          showStatus('Please login your DS');
         }
       } catch (e) {
         showStatus('Failed to connect "' + url + '"');
@@ -58,27 +54,36 @@ function fetchToken() {
   xhr.send();
 }
 
+function setDefaultPort() {
+  var host = _id('host');
+  host.value = host.value.trim();
+
+  if (host.value.match(/quickconnect.to$/)) {
+    _id('port').value = _id('scheme').value == 'http' ? 80 : 443;
+    _id('port').disabled = true;
+    return;
+  }
+
+  _id('port').disabled = false;
+}
+
 function saveOptions() {
-  var dsUrl = getDSUrl();
-  var token = _id('token').value;
-  var doNotification = _id('notification').checked;
-
-  if (!validateUrl(dsUrl)) {
+  if (!validateUrl(getDSUrl())) {
     return;
   }
 
-  if (!token) {
-    showStatus('No Syno Token');
-    return;
-  }
+  fetchToken(function() {
+    var dsUrl = getDSUrl();
+    var token = _id('token').value;
+    var doNotification = _id('notification').checked;
 
-  chrome.storage.sync.set({
-    dsUrl: dsUrl,
-    token: token,
-    enablePolling: doNotification
-  }, function() {
-    showStatus('Options saved.');
-    setTimeout(function() { window.close() }, 1000);
+    chrome.storage.sync.set({
+      dsUrl: dsUrl,
+      token: token,
+      enablePolling: doNotification
+    }, function() {
+      showStatus('Options saved.');
+    });
   });
 }
 
@@ -105,9 +110,19 @@ function restoreOptions() {
     if (items.hasOwnProperty('enablePolling')) {
       _id('notification').checked = items.enablePolling;
     }
+
+    setDefaultPort();
   });
 }
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
-_id('fetch-token').addEventListener('click', fetchToken);
+
+_id('host').addEventListener('change', setDefaultPort);
+_id('scheme').addEventListener('change', setDefaultPort);
 _id('save').addEventListener('click', saveOptions);
+_id('close').addEventListener('click', function() { window.close(); });
+
+_id('show-advance').addEventListener('change', function(e) {
+  document.querySelector('.advance-options').style.visibility =
+    this.checked ? 'visible' : 'hidden';
+});
